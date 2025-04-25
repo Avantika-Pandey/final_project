@@ -1,9 +1,13 @@
 package org.example;
 
+import org.jfree.chart.ChartFactory;
+import org.jfree.chart.ChartPanel;
+import org.jfree.chart.JFreeChart;
+import org.jfree.chart.plot.PlotOrientation;
+import org.jfree.data.category.DefaultCategoryDataset;
+
 import javax.swing.*;
 import java.awt.*;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 
 public class EffortEstimationUI extends JFrame {
 
@@ -11,7 +15,7 @@ public class EffortEstimationUI extends JFrame {
 
     public EffortEstimationUI() {
         setTitle("Effort Estimation Tool");
-        setSize(600, 400);
+        setSize(700, 500);
         setDefaultCloseOperation(EXIT_ON_CLOSE);
         setLayout(new BorderLayout());
 
@@ -19,51 +23,114 @@ public class EffortEstimationUI extends JFrame {
         JButton runCocomoButton = new JButton("Run COCOMO");
         JButton runPsoButton = new JButton("Run PSO");
         JButton runRegressionButton = new JButton("Run Regression");
+        JButton compareMMREButton = new JButton("Compare MMREs");
+        JButton clearOutputButton = new JButton("Clear Output");
 
         // Create output area
         outputArea = new JTextArea();
         outputArea.setEditable(false);
         JScrollPane scrollPane = new JScrollPane(outputArea);
 
+        // Custom KLOC input
+        JPanel klocPanel = new JPanel();
+        JTextField klocInput = new JTextField(10);
+        JButton predictButton = new JButton("Predict Effort");
+        klocPanel.add(new JLabel("Enter KLOC:"));
+        klocPanel.add(klocInput);
+        klocPanel.add(predictButton);
+
         // Button panel
         JPanel buttonPanel = new JPanel();
         buttonPanel.add(runCocomoButton);
         buttonPanel.add(runPsoButton);
         buttonPanel.add(runRegressionButton);
+        buttonPanel.add(compareMMREButton);
+        buttonPanel.add(clearOutputButton);
 
         add(buttonPanel, BorderLayout.NORTH);
         add(scrollPane, BorderLayout.CENTER);
+        add(klocPanel, BorderLayout.SOUTH);
 
         // Button actions
-        runCocomoButton.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                outputArea.append("Running COCOMO model...\n");
-                // Call your Main.java COCOMO part here (I'll show you how next)
+        runCocomoButton.addActionListener(e -> {
+            try {
+                EffortEstimator estimator = new EffortEstimator();
+                String result = estimator.runCocomoDefault();
+                outputArea.append("🔵 " + result + "\n\n");
+            } catch (Exception ex) {
+                outputArea.append("❌ Error: " + ex.getMessage() + "\n");
             }
         });
 
-        runPsoButton.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                outputArea.append("Running PSO Optimization...\n");
-                // Call your Main.java PSO part here
+        runPsoButton.addActionListener(e -> {
+            try {
+                EffortEstimator estimator = new EffortEstimator();
+                String result = estimator.runPso();
+                outputArea.append("🟢 " + result + "\n\n");
+            } catch (Exception ex) {
+                outputArea.append("❌ Error: " + ex.getMessage() + "\n");
             }
         });
 
-        runRegressionButton.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                outputArea.append("Running Regression model...\n");
-                // Call your Main.java Regression part here
+        runRegressionButton.addActionListener(e -> {
+            try {
+                EffortEstimator estimator = new EffortEstimator();
+                String result = estimator.runRegression();
+                outputArea.append("🟣 " + result + "\n\n");
+            } catch (Exception ex) {
+                outputArea.append("❌ Error: " + ex.getMessage() + "\n");
             }
         });
+
+        compareMMREButton.addActionListener(e -> {
+            try {
+                EffortEstimator estimator = new EffortEstimator();
+
+                // FIRST: Run all models to calculate the MMREs
+                estimator.runCocomoDefault();
+                estimator.runPso();
+                estimator.runRegression();
+
+                // THEN: show the chart
+                showMMREChart(estimator.getMmreCocomo(), estimator.getMmrePso(), estimator.getMmreRegression());
+            } catch (Exception ex) {
+                outputArea.append("❌ Chart Error: " + ex.getMessage() + "\n");
+            }
+        });
+
+
+        predictButton.addActionListener(e -> {
+            try {
+                double kloc = Double.parseDouble(klocInput.getText());
+                EffortEstimator estimator = new EffortEstimator();
+                String prediction = estimator.predictEffortFromKloc(kloc);
+                outputArea.append(prediction + "\n\n");
+            } catch (Exception ex) {
+                outputArea.append("❌ Invalid input: " + ex.getMessage() + "\n");
+            }
+        });
+
+        clearOutputButton.addActionListener(e -> outputArea.setText(""));
+    }
+
+    private void showMMREChart(double cocomo, double pso, double regression) {
+        DefaultCategoryDataset dataset = new DefaultCategoryDataset();
+        dataset.addValue(cocomo, "MMRE", "COCOMO");
+        dataset.addValue(pso, "MMRE", "PSO");
+        dataset.addValue(regression, "MMRE", "Regression");
+
+        JFreeChart chart = ChartFactory.createBarChart(
+                "MMRE Comparison", "Model", "MMRE",
+                dataset, PlotOrientation.VERTICAL, false, true, false);
+
+        JFrame chartFrame = new JFrame("MMRE Chart");
+        chartFrame.setContentPane(new ChartPanel(chart));
+        chartFrame.setSize(500, 400);
+        chartFrame.setLocationRelativeTo(null);
+        chartFrame.setVisible(true);
     }
 
     public static void main(String[] args) {
-        SwingUtilities.invokeLater(() -> {
-            EffortEstimationUI ui = new EffortEstimationUI();
-            ui.setVisible(true);
-        });
+        SwingUtilities.invokeLater(() -> new EffortEstimationUI().setVisible(true));
     }
 }
