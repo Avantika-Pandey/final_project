@@ -153,7 +153,7 @@ public class EffortEstimationUI extends JFrame {
         chartFrame.setLocationRelativeTo(null);
         chartFrame.setVisible(true);
 
-        // Optional: Save chart to PNG file
+         // Optional: Save chart to PNG file
         try {
             java.io.File outputFile = new java.io.File("mmre_chart.png");
             org.jfree.chart.ChartUtils.saveChartAsPNG(outputFile, chart, 500, 300);
