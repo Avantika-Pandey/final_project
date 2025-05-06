@@ -124,7 +124,7 @@ public class EffortEstimationUI extends JFrame {
         dataset.addValue(psoPercent, "MMRE", "PSO");
         dataset.addValue(regressionPercent, "MMRE", "Regression");
 
-        // Create chart
+        // Chart Creation (Pratistha)
         JFreeChart chart = ChartFactory.createBarChart(
                 "MMRE Comparison", "Model", "MMRE (%)",
                 dataset, PlotOrientation.VERTICAL, false, true, false);
