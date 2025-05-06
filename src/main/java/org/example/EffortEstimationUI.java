@@ -114,21 +114,55 @@ public class EffortEstimationUI extends JFrame {
     }
 
     private void showMMREChart(double cocomo, double pso, double regression) {
-        DefaultCategoryDataset dataset = new DefaultCategoryDataset();
-        dataset.addValue(cocomo, "MMRE", "COCOMO");
-        dataset.addValue(pso, "MMRE", "PSO");
-        dataset.addValue(regression, "MMRE", "Regression");
+        // Format MMREs to percentages with two decimal places
+        double cocomoPercent = Double.parseDouble(String.format("%.2f", cocomo * 100));
+        double psoPercent = Double.parseDouble(String.format("%.2f", pso * 100));
+        double regressionPercent = Double.parseDouble(String.format("%.2f", regression * 100));
 
+        DefaultCategoryDataset dataset = new DefaultCategoryDataset();
+        dataset.addValue(cocomoPercent, "MMRE", "COCOMO");
+        dataset.addValue(psoPercent, "MMRE", "PSO");
+        dataset.addValue(regressionPercent, "MMRE", "Regression");
+
+        // Create chart
         JFreeChart chart = ChartFactory.createBarChart(
-                "MMRE Comparison", "Model", "MMRE",
+                "MMRE Comparison", "Model", "MMRE (%)",
                 dataset, PlotOrientation.VERTICAL, false, true, false);
 
+        // Chart panel
+        ChartPanel chartPanel = new ChartPanel(chart);
+        chartPanel.setPreferredSize(new Dimension(500, 300));
+
+        // MMRE value text display
+        JTextArea mmreText = new JTextArea(
+                String.format("COCOMO MMRE: %.2f%%\nPSO MMRE: %.2f%%\nRegression MMRE: %.2f%%",
+                        cocomoPercent, psoPercent, regressionPercent)
+        );
+        mmreText.setEditable(false);
+        mmreText.setFont(new Font("Monospaced", Font.PLAIN, 12));
+
+        // Combine chart and text
+        JPanel combinedPanel = new JPanel(new BorderLayout());
+        combinedPanel.add(chartPanel, BorderLayout.CENTER);
+        combinedPanel.add(mmreText, BorderLayout.SOUTH);
+
+        // Frame
         JFrame chartFrame = new JFrame("MMRE Chart");
-        chartFrame.setContentPane(new ChartPanel(chart));
-        chartFrame.setSize(500, 400);
+        chartFrame.setContentPane(combinedPanel);
+        chartFrame.pack();
         chartFrame.setLocationRelativeTo(null);
         chartFrame.setVisible(true);
+
+        // Optional: Save chart to PNG file
+        try {
+            java.io.File outputFile = new java.io.File("mmre_chart.png");
+            org.jfree.chart.ChartUtils.saveChartAsPNG(outputFile, chart, 500, 300);
+            System.out.println("✅ Chart saved as mmre_chart.png");
+        } catch (Exception e) {
+            System.err.println("❌ Failed to save chart: " + e.getMessage());
+        }
     }
+
 
     public static void main(String[] args) {
         SwingUtilities.invokeLater(() -> new EffortEstimationUI().setVisible(true));
