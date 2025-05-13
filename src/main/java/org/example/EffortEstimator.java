@@ -96,12 +96,13 @@ public class EffortEstimator {
         return String.format("Regression Equation: Effort = %.4f * KLOC + %.4f\nRegression MMRE: %.4f", m, c, mmreRegression);
     }
 
-    public String predictEffortFromKloc(double kloc) {
+    public double predictEffortCocomo(double kloc) {
         double method = 30;
         double eaf = method / 30.0;
+        return 2.94 * Math.pow(kloc, 1.1) * eaf;
+    }
 
-        double cocomo = 2.94 * Math.pow(kloc, 1.1) * eaf;
-
+    public double predictEffortPso(double kloc) {
         double[][] data = new double[klocs.length][3];
         for (int i = 0; i < klocs.length; i++) {
             data[i][0] = klocs[i];
@@ -109,8 +110,11 @@ public class EffortEstimator {
             data[i][2] = actualEfforts[i];
         }
         Particle best = Main.runPSO(data, 30, 100);
-        double pso = best.a * Math.pow(kloc, best.b) * eaf;
+        double eaf = 1.0;
+        return best.a * Math.pow(kloc, best.b) * eaf;
+    }
 
+    public double predictEffortRegression(double kloc) {
         int n = klocs.length;
         double sumX = 0, sumY = 0, sumXY = 0, sumX2 = 0;
         for (int i = 0; i < n; i++) {
@@ -121,10 +125,7 @@ public class EffortEstimator {
         }
         double m = (n * sumXY - sumX * sumY) / (n * sumX2 - sumX * sumX);
         double c = (sumY - m * sumX) / n;
-        double regression = m * kloc + c;
-
-        return String.format("Predicted effort for %.2f KLOC:\nCOCOMO: %.2f\nPSO: %.2f\nRegression: %.2f",
-                kloc, cocomo, pso, regression);
+        return m * kloc + c;
     }
 
     private double calculateMMRE(double[] actual, double[] predicted) {
