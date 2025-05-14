@@ -15,9 +15,17 @@ public class EffortEstimator {
     private double mmrePso = 0;
     private double mmreRegression = 0;
 
-    public double getMmreCocomo() { return mmreCocomo; }
-    public double getMmrePso() { return mmrePso; }
-    public double getMmreRegression() { return mmreRegression; }
+    public double getMmreCocomo() {
+        return mmreCocomo;
+    }
+
+    public double getMmrePso() {
+        return mmrePso;
+    }
+
+    public double getMmreRegression() {
+        return mmreRegression;
+    }
 
     public EffortEstimator() throws Exception {
         loadExcelData();
